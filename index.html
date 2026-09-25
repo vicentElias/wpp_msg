@@ -1,11 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta name="theme-color" content="#f4f6f1">
+    <title>Saudações | WhatsApp</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/app.js" defer></script>
 </head>
 <body>
-    
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="Saudações, início">
+            <span class="brand-mark" aria-hidden="true">S</span>
+            <span>saudações<span class="brand-dot">.</span></span>
+        </a>
+        <div class="topbar-right">
+            <span class="connection-indicator" id="connectionIndicator"></span>
+            <span id="connectionLabel">Conectando à aplicação</span>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <section class="page-heading" aria-labelledby="pageTitle">
+            <div>
+                <p class="eyebrow">WHATSAPP WEB <span>·</span> ENVIO ASSISTIDO</p>
+                <h1 id="pageTitle">Preparar saudações</h1>
+                <p class="page-description">Escolha os contatos e revise a mensagem antes de iniciar.</p>
+            </div>
+            <div class="heading-date" id="currentDate"></div>
+        </section>
+
+        <section class="summary-bar" aria-label="Resumo dos contatos">
+            <div class="summary-item">
+                <span class="summary-value" id="totalContacts">—</span>
+                <span class="summary-label">contatos válidos</span>
+            </div>
+            <span class="summary-divider" aria-hidden="true"></span>
+            <div class="summary-item">
+                <span class="summary-value" id="selectedCount">0</span>
+                <span class="summary-label">selecionados</span>
+            </div>
+            <span class="summary-divider" aria-hidden="true"></span>
+            <div class="summary-item summary-note">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span>Envio pelo navegador padrão</span>
+            </div>
+        </section>
+
+        <div class="work-grid">
+            <section class="contacts-panel" aria-labelledby="contactsTitle">
+                <div class="panel-heading">
+                    <div>
+                        <p class="section-kicker">DESTINATÁRIOS</p>
+                        <h2 id="contactsTitle">Contatos</h2>
+                    </div>
+                    <button class="text-button" type="button" id="clearSelection">Limpar seleção</button>
+                </div>
+
+                <label class="search-box" for="contactSearch">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.8"></circle><path d="m13.2 13.2 4 4"></path></svg>
+                    <input id="contactSearch" type="search" placeholder="Buscar por nome ou telefone" autocomplete="off">
+                    <kbd>/</kbd>
+                </label>
+
+                <div class="list-toolbar">
+                    <label class="select-all">
+                        <input type="checkbox" id="selectVisible">
+                        <span>Selecionar visíveis</span>
+                    </label>
+                    <span id="visibleCount">Carregando…</span>
+                </div>
+
+                <div class="contact-list" id="contactList" aria-live="polite">
+                    <div class="empty-state">Carregando contatos…</div>
+                </div>
+            </section>
+
+            <section class="compose-panel" aria-labelledby="composeTitle">
+                <div class="panel-heading">
+                    <div>
+                        <p class="section-kicker">MENSAGEM</p>
+                        <h2 id="composeTitle">Composição</h2>
+                    </div>
+                    <span class="template-tag">PERSONALIZÁVEL</span>
+                </div>
+
+                <label class="field-label" for="messageTemplate">Modelo da mensagem</label>
+                <textarea id="messageTemplate" rows="6" spellcheck="true">{saudacao}, {nome}! 😊
+Passando para falar com você. Caso esteja precisando de cotação, me chama por aqui. Vou ficar à disposição para te atender!</textarea>
+                <p class="field-hint">Use <code>{nome}</code> e <code>{saudacao}</code> para personalizar.</p>
+
+                <div class="preview-block">
+                    <div class="preview-heading">
+                        <span>PRÉVIA</span>
+                        <span id="previewRecipient">Selecione um contato</span>
+                    </div>
+                    <p id="messagePreview"></p>
+                </div>
+
+                <div class="settings-heading">
+                    <div>
+                        <p class="section-kicker">AUTOMAÇÃO</p>
+                        <h3>Ritmo de envio</h3>
+                    </div>
+                    <span class="settings-unit">segundos</span>
+                </div>
+                <div class="settings-grid">
+                    <label class="number-field">
+                        <span>Intervalo mínimo</span>
+                        <input id="intervalMin" type="number" min="0" max="3600" value="15">
+                    </label>
+                    <label class="number-field">
+                        <span>Intervalo máximo</span>
+                        <input id="intervalMax" type="number" min="0" max="3600" value="30">
+                    </label>
+                    <label class="number-field wait-field">
+                        <span>Carregamento do WhatsApp</span>
+                        <input id="loadWait" type="number" min="1" max="120" value="20">
+                    </label>
+                </div>
+
+                <div class="consent-note">
+                    <span aria-hidden="true">i</span>
+                    <p>Envie somente para contatos que autorizaram o recebimento. O WhatsApp Web será aberto no navegador padrão.</p>
+                </div>
+
+                <button class="send-button" id="startSending" type="button" disabled>
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13M10 4l6 6-6 6"></path></svg>
+                    <span>Iniciar envio</span>
+                </button>
+
+                <section class="progress-panel" id="progressPanel" aria-live="polite" hidden>
+                    <div class="progress-heading">
+                        <strong id="progressTitle">Envio em andamento</strong>
+                        <span id="progressCount">0 / 0</span>
+                    </div>
+                    <div class="progress-track"><span id="progressBar"></span></div>
+                    <p id="progressDetail">Aguardando o próximo contato…</p>
+                    <ul class="result-list" id="resultList"></ul>
+                </section>
+            </section>
+        </div>
+        <footer class="page-footer">SAUDAÇÕES <span>·</span> AUTOMAÇÃO LOCAL</footer>
+    </main>
 </body>
 </html>

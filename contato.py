@@ -194,7 +194,7 @@ CONTATOS = [
     #{"nome": "Caio Taxista SALESOPOLIS", "telefone": "+5511996793082"},
     #{"nome": "Caio Tracker", "telefone": "+5511953220442"},
     #{"nome": "Calebe Filho", "telefone": "+5516996377451"},
-    #{"nome": "Calebe Filho", "telefone": "+5516992136316"},
+    {"nome": "Calebe Filho", "telefone": "+5516992136316"},
     #{"nome": "Calebe Filho 😎😎", "telefone": "+5516999619053"},
     #{"nome": "Calipao Acessorio", "telefone": "+551511964761408"},
     #{"nome": "Camacho", "telefone": "+5516991936999"},

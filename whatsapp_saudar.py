@@ -11,6 +11,7 @@ import re
 import time
 from urllib.parse import quote
 import webbrowser
+from collections.abc import Callable
 
 import pyautogui
 
@@ -66,9 +67,10 @@ def telefone_valido(telefone: str) -> bool:
     return bool(re.fullmatch(r"\+\d{10,15}", telefone))
 
 
-def montar_mensagem(nome: str) -> str:
+def montar_mensagem(nome: str, texto_padrao: str | None = None) -> str:
     """Monta a mensagem final substituindo {saudacao} e {nome}."""
-    return TEXTO_PADRAO.format(saudacao=saudacao_atual(), nome=nome)
+    modelo = TEXTO_PADRAO if texto_padrao is None else texto_padrao
+    return modelo.format(saudacao=saudacao_atual(), nome=nome)
 
 
 def enviar_mensagem_whatsapp(
@@ -100,14 +102,29 @@ def enviar_mensagem_whatsapp(
     pyautogui.hotkey("ctrl", "w")
 
 
-def enviar_mensagens() -> None:
-    """Abre cada conversa no WhatsApp Web e e
-    nvia a mensagem correspondente."""
-    if not CONTATOS:
+def enviar_mensagens(
+    contatos: list[dict[str, str]] | None = None,
+    texto_padrao: str | None = None,
+    intervalo_minimo: int | None = None,
+    intervalo_maximo: int | None = None,
+    tempo_de_espera: int | None = None,
+    ao_atualizar: Callable[[dict[str, object]], None] | None = None,
+) -> None:
+    """Abre cada conversa no WhatsApp Web e envia a mensagem correspondente."""
+    lista_contatos = CONTATOS if contatos is None else contatos
+    if not lista_contatos:
         print("A lista CONTATOS está vazia. Adicione pelo menos um contato.")
         return
 
-    for indice, contato in enumerate(CONTATOS, start=1):
+    minimo = INTERVALO_MINIMO if intervalo_minimo is None else intervalo_minimo
+    maximo = INTERVALO_MAXIMO if intervalo_maximo is None else intervalo_maximo
+    espera = (
+        TEMPO_DE_ESPERA_PARA_CARREGAR
+        if tempo_de_espera is None
+        else tempo_de_espera
+    )
+
+    for indice, contato in enumerate(lista_contatos, start=1):
         nome = str(contato["nome"]).strip()
         telefone = str(contato["telefone"]).strip()
 
@@ -118,24 +135,49 @@ def enviar_mensagens() -> None:
             )
             continue
 
-        mensagem = montar_mensagem(nome)
-        print(f"[{indice}/{len(CONTATOS)}] Enviando para {nome} ({telefone})...")
+        mensagem = montar_mensagem(nome, texto_padrao)
+        print(f"[{indice}/{len(lista_contatos)}] Enviando para {nome} ({telefone})...")
+        if ao_atualizar:
+            ao_atualizar({
+                "indice": indice,
+                "total": len(lista_contatos),
+                "nome": nome,
+                "telefone": telefone,
+                "status": "enviando",
+            })
 
         try:
             enviar_mensagem_whatsapp(
                 telefone=telefone,
                 mensagem=mensagem,
-                tempo_de_espera=TEMPO_DE_ESPERA_PARA_CARREGAR,
+                tempo_de_espera=espera,
             )
 
             print("Mensagem enviada (ou entregue ao fluxo do navegador).")
+            if ao_atualizar:
+                ao_atualizar({
+                    "indice": indice,
+                    "total": len(lista_contatos),
+                    "nome": nome,
+                    "telefone": telefone,
+                    "status": "concluido",
+                })
         except Exception as erro:
             # Continua com os próximos contatos em vez de interromper tudo.
             print(f"Erro ao enviar para {nome}: {erro}")
+            if ao_atualizar:
+                ao_atualizar({
+                    "indice": indice,
+                    "total": len(lista_contatos),
+                    "nome": nome,
+                    "telefone": telefone,
+                    "status": "erro",
+                    "erro": str(erro),
+                })
 
         # Não espera depois do último contato.
-        if indice < len(CONTATOS):
-            intervalo = random.randint(INTERVALO_MINIMO, INTERVALO_MAXIMO)
+        if indice < len(lista_contatos):
+            intervalo = random.randint(minimo, maximo)
             print(f"Aguardando {intervalo} segundos antes do próximo envio...")
             time.sleep(intervalo)
 
