@@ -25,8 +25,6 @@ import pyautogui
 # Exemplo para o Brasil: +5516999999999
 CONTATOS = [
     {"nome": "Vicente Elias ", "telefone": "+5516991023030"},
-    {"nome": "Vicente Elias ", "telefone": "+5516991023030"}
-    
 ]
 
 # Texto padrão da mensagem. Use {saudacao} para a saudação conforme o horário
