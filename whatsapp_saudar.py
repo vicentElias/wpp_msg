@@ -13,9 +13,6 @@ from urllib.parse import quote
 import webbrowser
 from collections.abc import Callable
 
-import pyautogui
-
-
 # ============================================================
 # CONFIGURAÇÕES EDITÁVEIS
 # ============================================================
@@ -79,6 +76,9 @@ def enviar_mensagem_whatsapp(
     tempo_de_espera: int,
 ) -> None:
     """Abre a conversa, foca o WhatsApp Web e envia a mensagem."""
+    # A automação gráfica só é necessária durante um envio, não para iniciar a API.
+    import pyautogui
+
     url = (
         f"https://web.whatsapp.com/send?phone={telefone}"
         f"&text={quote(mensagem)}"
