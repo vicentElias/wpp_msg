@@ -54,7 +54,10 @@
                         <p class="section-kicker">DESTINATÁRIOS</p>
                         <h2 id="contactsTitle">Contatos</h2>
                     </div>
-                    <button class="text-button" type="button" id="clearSelection">Limpar seleção</button>
+                    <div class="contact-panel-actions">
+                        <button class="text-button" type="button" id="clearSelection">Limpar seleção</button>
+                        <button class="add-contact-button" type="button" id="newContact">Novo contato</button>
+                    </div>
                 </div>
 
                 <label class="search-box" for="contactSearch">
@@ -143,5 +146,32 @@ Passando para falar com você. Caso esteja precisando de cotação, me chama por
         </div>
         <footer class="page-footer">SAUDAÇÕES <span>·</span> AUTOMAÇÃO LOCAL</footer>
     </main>
+
+    <dialog class="contact-dialog" id="contactDialog" aria-labelledby="contactDialogTitle">
+        <form id="contactForm">
+            <div class="dialog-heading">
+                <div>
+                    <p class="section-kicker">AGENDA</p>
+                    <h2 id="contactDialogTitle">Novo contato</h2>
+                </div>
+                <button class="dialog-close" type="button" id="cancelContact" aria-label="Fechar">×</button>
+            </div>
+            <input type="hidden" id="contactId">
+            <label class="dialog-field" for="contactName">
+                <span>Nome</span>
+                <input id="contactName" name="nome" type="text" maxlength="160" autocomplete="name" required>
+            </label>
+            <label class="dialog-field" for="contactPhone">
+                <span>Telefone internacional</span>
+                <input id="contactPhone" name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+5516999999999" pattern="\+\d{10,15}" required>
+                <small>Inclua o código do país e use somente o sinal + e números.</small>
+            </label>
+            <p class="form-error" id="contactFormError" role="alert" hidden></p>
+            <div class="dialog-actions">
+                <button class="cancel-button" type="button" id="cancelContactSecondary">Cancelar</button>
+                <button class="add-contact-button" type="submit" id="saveContact">Adicionar contato</button>
+            </div>
+        </form>
+    </dialog>
 </body>
 </html>

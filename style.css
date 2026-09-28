@@ -149,7 +149,7 @@ kbd { min-width: 20px; padding: 2px 5px; border: 1px solid var(--line); border-r
 .select-all { display: flex; align-items: center; gap: 8px; color: #5d6860; cursor: pointer; }
 input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: var(--green); cursor: pointer; }
 .contact-list { max-height: 460px; min-height: 170px; overflow: auto; border-top: 1px solid var(--line); scrollbar-color: #cbd4cc transparent; scrollbar-width: thin; }
-.contact-row { min-height: 58px; display: flex; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid #edf0ec; cursor: pointer; }
+.contact-row { min-height: 58px; display: grid; grid-template-columns: 15px 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid #edf0ec; }
 .contact-row:hover { background: #f8faf7; }
 .contact-avatar { width: 32px; aspect-ratio: 1; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--green-pale); color: var(--green); font-size: 11px; font-weight: 700; }
 .contact-copy { min-width: 0; flex: 1; }
@@ -233,4 +233,39 @@ textarea:focus, .number-field input:focus { border-color: #80a991; box-shadow: 0
 
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+.contact-panel-actions { display: flex; align-items: center; gap: 12px; }
+.add-contact-button { min-height: 34px; padding: 0 11px; border: 0; border-radius: 4px; background: var(--green); color: #fff; cursor: pointer; font-size: 11px; font-weight: 650; white-space: nowrap; }
+.add-contact-button:hover:not(:disabled) { background: var(--green-dark); }
+.add-contact-button:disabled { cursor: not-allowed; opacity: .6; }
+.contact-actions-inline { display: flex; align-items: center; gap: 4px; }
+.contact-action-button { min-height: 28px; padding: 0 7px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--green); cursor: pointer; font-size: 10px; }
+.contact-action-button:hover:not(:disabled) { border-color: var(--line); background: #fff; }
+.contact-action-button.delete-contact { color: var(--danger); }
+.contact-action-button:disabled { cursor: not-allowed; opacity: .45; }
+
+.contact-dialog { width: min(440px, calc(100% - 32px)); padding: 0; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #fff; box-shadow: 0 24px 80px rgba(23, 42, 31, .22); }
+.contact-dialog::backdrop { background: rgba(23, 35, 28, .42); backdrop-filter: blur(2px); }
+.contact-dialog form { padding: 22px; }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.dialog-heading h2 { margin: 5px 0 0; font-size: 19px; font-weight: 650; }
+.dialog-close { width: 30px; height: 30px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; font-size: 24px; line-height: 1; }
+.dialog-close:hover { background: var(--canvas); color: var(--ink); }
+.dialog-field { display: flex; flex-direction: column; gap: 7px; margin: 0 0 16px; color: #556158; font-size: 11px; font-weight: 600; }
+.dialog-field input { width: 100%; height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; outline: 0; color: var(--ink); background: #fcfdfb; font-size: 13px; }
+.dialog-field input:focus { border-color: #80a991; box-shadow: 0 0 0 3px rgba(23, 107, 75, .08); }
+.dialog-field small { color: #8a938c; font-size: 10px; font-weight: 400; line-height: 1.5; }
+.form-error { margin: 0 0 14px; color: var(--danger); font-size: 11px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+.cancel-button { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: #59645c; cursor: pointer; font-size: 11px; }
+.cancel-button:hover { background: var(--canvas); }
+
+@media (max-width: 500px) {
+	.contact-panel-actions { gap: 8px; }
+	.contact-actions-inline { flex-direction: column; align-items: stretch; gap: 0; }
+	.contact-action-button { min-height: 25px; padding: 0 4px; font-size: 9px; }
+	.contact-row { grid-template-columns: 15px 28px minmax(0, 1fr) auto; gap: 7px; }
+	.contact-avatar { width: 28px; }
+	.contact-dialog form { padding: 18px; }
 }

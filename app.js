@@ -9,6 +9,17 @@ const elements = {
     visibleCount: document.querySelector("#visibleCount"),
     contactList: document.querySelector("#contactList"),
     clearSelection: document.querySelector("#clearSelection"),
+    newContact: document.querySelector("#newContact"),
+    contactDialog: document.querySelector("#contactDialog"),
+    contactForm: document.querySelector("#contactForm"),
+    contactDialogTitle: document.querySelector("#contactDialogTitle"),
+    contactId: document.querySelector("#contactId"),
+    contactName: document.querySelector("#contactName"),
+    contactPhone: document.querySelector("#contactPhone"),
+    contactFormError: document.querySelector("#contactFormError"),
+    cancelContact: document.querySelector("#cancelContact"),
+    cancelContactSecondary: document.querySelector("#cancelContactSecondary"),
+    saveContact: document.querySelector("#saveContact"),
     messageTemplate: document.querySelector("#messageTemplate"),
     previewRecipient: document.querySelector("#previewRecipient"),
     messagePreview: document.querySelector("#messagePreview"),
@@ -49,6 +60,17 @@ function filteredContacts() {
     );
 }
 
+function makeActionButton(label, className, onClick, disabled, contactName) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `contact-action-button ${className}`;
+    button.textContent = label;
+    button.disabled = disabled;
+    button.setAttribute("aria-label", `${label} ${contactName}`);
+    button.addEventListener("click", onClick);
+    return button;
+}
+
 function renderContacts() {
     const visibleContacts = filteredContacts();
     elements.contactList.replaceChildren();
@@ -59,7 +81,9 @@ function renderContacts() {
     if (visibleContacts.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty-state";
-        empty.textContent = contacts.length ? "Nenhum contato encontrado." : "Não foi possível carregar os contatos.";
+        empty.textContent = contacts.length
+            ? "Nenhum contato encontrado."
+            : "Nenhum contato cadastrado. Use ‘Novo contato’ para começar.";
         elements.contactList.append(empty);
         updateSummary();
         return;
@@ -67,7 +91,7 @@ function renderContacts() {
 
     const fragment = document.createDocumentFragment();
     for (const contact of visibleContacts) {
-        const row = document.createElement("label");
+        const row = document.createElement("div");
         row.className = "contact-row";
 
         const checkbox = document.createElement("input");
@@ -98,7 +122,14 @@ function renderContacts() {
         phone.className = "contact-phone";
         phone.textContent = contact.telefone;
         copy.append(name, phone);
-        row.append(checkbox, avatar, copy);
+
+        const actions = document.createElement("span");
+        actions.className = "contact-actions-inline";
+        actions.append(
+            makeActionButton("Editar", "edit-contact", () => openContactDialog(contact), isRunning, contact.nome),
+            makeActionButton("Excluir", "delete-contact", () => deleteContact(contact), isRunning, contact.nome),
+        );
+        row.append(checkbox, avatar, copy, actions);
         fragment.append(row);
     }
     elements.contactList.append(fragment);
@@ -127,6 +158,7 @@ function updateSendButton() {
     elements.startSending.querySelector("span").textContent = isRunning
         ? "Envio em andamento"
         : "Iniciar envio";
+    elements.newContact.disabled = isRunning;
 }
 
 function setConnection(connected, label) {
@@ -177,6 +209,8 @@ async function loadContacts() {
         if (!contactsResponse.ok || !statusResponse.ok) throw new Error("Falha ao consultar a aplicação.");
         const data = await contactsResponse.json();
         contacts = data.contacts;
+        const availableIds = new Set(contacts.map((contact) => contact.id));
+        selectedIds = new Set([...selectedIds].filter((id) => availableIds.has(id)));
         elements.totalContacts.textContent = data.total.toLocaleString("pt-BR");
         setConnection(true, "Aplicação conectada");
         elements.currentDate.textContent = new Intl.DateTimeFormat("pt-BR", {
@@ -186,9 +220,9 @@ async function loadContacts() {
         updatePreview();
         updateSendButton();
         applyStatus(await statusResponse.json());
-    } catch (error) {
+    } catch {
         setConnection(false, "Aplicação indisponível");
-        elements.contactList.innerHTML = "";
+        elements.contactList.replaceChildren();
         const message = document.createElement("div");
         message.className = "empty-state";
         message.textContent = "Inicie a aplicação Python para carregar os contatos.";
@@ -213,6 +247,63 @@ async function pollStatus() {
         applyStatus(await response.json());
     } catch {
         setConnection(false, "Conexão interrompida");
+    }
+}
+
+function openContactDialog(contact = null) {
+    elements.contactForm.reset();
+    elements.contactFormError.hidden = true;
+    elements.contactFormError.textContent = "";
+    elements.contactId.value = contact ? String(contact.id) : "";
+    elements.contactName.value = contact?.nome || "";
+    elements.contactPhone.value = contact?.telefone || "";
+    elements.contactDialogTitle.textContent = contact ? "Editar contato" : "Novo contato";
+    elements.saveContact.textContent = contact ? "Salvar alterações" : "Adicionar contato";
+    elements.contactDialog.showModal();
+    elements.contactName.focus();
+}
+
+async function saveContact(event) {
+    event.preventDefault();
+    const contactId = elements.contactId.value;
+    const method = contactId ? "PUT" : "POST";
+    const url = contactId ? `/api/contacts/${encodeURIComponent(contactId)}` : "/api/contacts";
+    elements.saveContact.disabled = true;
+    elements.contactFormError.hidden = true;
+
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                nome: elements.contactName.value,
+                telefone: elements.contactPhone.value,
+            }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Não foi possível salvar o contato.");
+        elements.contactDialog.close();
+        await loadContacts();
+    } catch (error) {
+        elements.contactFormError.textContent = error.message;
+        elements.contactFormError.hidden = false;
+    } finally {
+        elements.saveContact.disabled = false;
+    }
+}
+
+async function deleteContact(contact) {
+    const accepted = window.confirm(`Excluir o contato “${contact.nome}”? Esta ação não pode ser desfeita.`);
+    if (!accepted) return;
+
+    try {
+        const response = await fetch(`/api/contacts/${encodeURIComponent(contact.id)}`, { method: "DELETE" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Não foi possível excluir o contato.");
+        selectedIds.delete(contact.id);
+        await loadContacts();
+    } catch (error) {
+        window.alert(error.message);
     }
 }
 
@@ -247,6 +338,13 @@ async function startSending() {
 elements.contactSearch.addEventListener("input", renderContacts);
 elements.messageTemplate.addEventListener("input", updatePreview);
 elements.startSending.addEventListener("click", startSending);
+elements.newContact.addEventListener("click", () => openContactDialog());
+elements.contactForm.addEventListener("submit", saveContact);
+elements.cancelContact.addEventListener("click", () => elements.contactDialog.close());
+elements.cancelContactSecondary.addEventListener("click", () => elements.contactDialog.close());
+elements.contactDialog.addEventListener("click", (event) => {
+    if (event.target === elements.contactDialog) elements.contactDialog.close();
+});
 elements.selectVisible.addEventListener("change", () => {
     for (const contact of filteredContacts()) {
         if (elements.selectVisible.checked) selectedIds.add(contact.id);
